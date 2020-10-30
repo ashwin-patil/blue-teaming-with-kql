@@ -3,7 +3,9 @@ Repository with Sample KQL Query examples for Threat Hunting
 
 This folder has various KQL examples related to Threat Hunting/Blue Teaming presented at [Blue Team Village at GrayHat 2020](https://grayhat.co/event/blue-teaming-with-kusto-query-language-kql/).
 
- **Jupyter Notebook** : Click on nbviewer Badge ## ![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb)
+ **Jupyter Notebook** : 
+ 
+ Click on nbviewer Badge :: [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb)
 
 
 - [Structure of Basic KQL Query](#structure-of-basic-kql-query)
