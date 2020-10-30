@@ -304,6 +304,8 @@ Source - https://github.com/Azure/Azure-Sentinel/blob/master/Exploration%20Queri
 ```
 
 ## Externaldata Demo
+
+KQL Blog - [Using External data sources to enrich network logs using Azure storage and KQL](https://techcommunity.microsoft.com/t5/azure-sentinel/using-external-data-sources-to-enrich-network-logs-using-azure/ba-p/1450345)
 ```python
   let covidIndicators = (externaldata(TimeGenerated:datetime, FileHashValue:string, FileHashType: string )
   [@"https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/Sample%20Data/Feeds/Microsoft.Covid19.Indicators.csv"]
@@ -325,6 +327,7 @@ Link is not static and gets expired as new content arrives
 ```
 
 ## Time Series Analysis
+ KQL Blog - [Time Series Analysis and  it`s applications in Security](https://techcommunity.microsoft.com/t5/azure-sentinel/looking-for-unknown-anomalies-what-is-normal-time-series/ba-p/555052)
 
 Time Series Analysis - Process Execution Anomaly
 ```python
@@ -357,6 +360,12 @@ Time Series Analysis - Process Execution Anomaly
 ```
 
 ## Network Beaconing
+Reference Work:
+- [Threat Hunting Project](https://github.com/ThreatHuntingProject/ThreatHunting/blob/master/hunts/beacon_detection_via_intra_request_time_deltas.md)
+
+- [Flare](http://www.austintaylor.io/detect/beaconing/intrusion/detection/system/command/control/flare/elastic/stack/2017/06/10/detect-beaconing-with-flare-elasticsearch-and-intrusion-detection-systems/) by [Austin Taylor](https://twitter.com/HuntOperator)
+
+ KQL Blog - [Detect Network Beaconing via Intr-Request time delta patterns in Azure Sentinel](https://techcommunity.microsoft.com/t5/azure-sentinel/detect-network-beaconing-via-intra-request-time-delta-patterns/ba-p/779586)
 
 ```python
   let starttime = 2d;
