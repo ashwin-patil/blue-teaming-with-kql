@@ -13,12 +13,12 @@ This folder has various KQL examples related to Threat Hunting/Blue Teaming pres
 - [Exploring Tables and Schemas](#explore-tables-schemas)
 - [Asset/Device Details](#asset-details)
 - [Query Parameterization](#query-parameterization)
-- [Dynamic DataTypes](#handle-dynamic-datatypes)
+- [Dynamic DataTypes](#dynamic-datatypes)
 - [Datetime](#datetime)
 - [Regex Extraction](#regex-extraction)
 - [Functions](#functions)
     - [User Defined](#user-defined)
-    - [Built-in Functions](#built-in)
+    - [Built-in Functions](#built-in-functions)
 - [Time Series Analysis](#time-series-analysis)
 - [Network Beaconing](#network-beaconing)
 - [KQL Programmatic Interfaces](#kql-programmatic-interfaces)
@@ -169,7 +169,7 @@ Expensive Computes
 ```
 
 ## Dynamic DataTypes
-![Image](./images/dynamic-datatypes.png)
+![](./images/dynamic-datatypes.PNG)
 
 
 ## Datetime
