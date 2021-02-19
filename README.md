@@ -296,13 +296,13 @@ Source - https://github.com/Azure/Azure-Sentinel/blob/master/Exploration%20Queri
 
 ### Windows XML Parsing of Dynamic Field - EventData
 ```python
-  SecurityEvent
-  | where TimeGenerated > ago(4h)
-  | extend EventData = parse_xml(EventData).EventData.Data
-  | mv-expand bagexpansion=array EventData
-  | extend EventName=tostring(EventData['@Name']), EventValue=EventData['#text']
-  | evaluate pivot(EventName, any(EventValue), TimeGenerated, EventID)
-  | limit 100 
+   Event
+   | where TimeGenerated > ago(4h)
+   | extend EventData = parse_xml(EventData).DataItem.EventData.Data
+   | mv-expand bagexpansion=array EventData
+   | evaluate bag_unpack(EventData)
+   | extend Key=tostring(['@Name']), Value=['#text']
+   | evaluate pivot(Key, any(Value), TimeGenerated, EventLog, Computer, EventID)
 ```
 
 ## Externaldata Demo
