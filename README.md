@@ -3,6 +3,15 @@ Repository with Sample KQL Query examples for Threat Hunting
 
 This folder has various KQL examples related to Threat Hunting/Blue Teaming presented at [Blue Team Village at GrayHat 2020](https://grayhat.co/event/blue-teaming-with-kusto-query-language-kql/).
 
+## Presentation:
+
+[GrayHat-BlueTeamingwithKQL](https://github.com/ashwin-patil/blue-teaming-with-kql/blob/main/GrayHat-%20BlueTeamingwithKQL.pdf)
+
+## Talk Recorded Video
+[![IMAGE ALT TEXT HERE](./images/youtube_thumbnail.jpg)](https://www.youtube.com/watch?v=IMZkqTEBFeA)
+
+
+
  **Jupyter Notebook** : 
  
  Click on nbviewer Badge :: [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.jupyter.org/github/microsoft/msticpy/blob/master/docs/notebooks/Data_Queries.ipynb)
@@ -23,7 +32,7 @@ This folder has various KQL examples related to Threat Hunting/Blue Teaming pres
 - [Network Beaconing](#network-beaconing)
 - [KQL Programmatic Interfaces](#kql-programmatic-interfaces)
     - [QueryProvider Demo](#queryprovider-demo)
-
+ - [KQL Gallery](#kql-gallery)
 
 ## Structure of Basic KQL Query
 1. Variable Declaration
@@ -420,3 +429,25 @@ Reference Work:
 
 ### QueryProvider Demo
 ![Demo](./images/nbdemo.gif)
+
+
+## KQL Gallery
+
+> Curated list of KQL queries worth highlighting
+
+
+One-stop KQL query for most regex (IP, URL, API Access tokens, Crypto Wallets) needs. 
+Regex Credits - [bee-san/PyWhat Github](https://github.com/bee-san/pyWhat) 
+
+```python
+let pywhatregex = (externaldata(Name:string, Regex:string, plural_name: string, Description: string, Rarity:string, URL: string, Tags: dynamic )
+[@"https://raw.githubusercontent.com/bee-san/pyWhat/main/pywhat/Data/regex.json"] with (format="multijson"));
+pywhatregex
+```
+subquery to select a specific regex
+```python
+let pywhatregex = (externaldata(Name:string, Regex:string, plural_name: string, Description: string, Rarity:string, URL: string, Tags: dynamic )
+[@"https://raw.githubusercontent.com/bee-san/pyWhat/main/pywhat/Data/regex.json"] with (format="multijson"));
+let githubaccesstokenregex = pywhatregex | where Name == "GitHub Access Token" | project Regex;
+githubaccesstokenregex
+```
