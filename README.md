@@ -437,7 +437,7 @@ Reference Work:
 
 
 One-stop KQL query for most regex (IP, URL, API Access tokens, Crypto Wallets) needs. 
-Regex Credits - [bee-san/PyWhat Github](https://github.com/bee-san/pyWhat) 
+<br>Regex Credits - [bee-san/PyWhat Github](https://github.com/bee-san/pyWhat) 
 
 ```python
 let pywhatregex = (externaldata(Name:string, Regex:string, plural_name: string, Description: string, Rarity:string, URL: string, Tags: dynamic )
