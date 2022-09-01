@@ -37,14 +37,14 @@ This folder has various KQL examples related to Threat Hunting/Blue Teaming pres
     - [QueryProvider Demo](#queryprovider-demo)
  - [KQL Gallery](#kql-gallery)
  ## KQLCafe-2022
-- [Practical Detection Engineering/Hunting with KQL](practical-kql)
-  - [Simple aggregation and threshold-based query](simple-aggregation-and-threshold-based-query)
-  - [Bringing context from other data sources](bringing-context-from-other-data-sources)
-  - [Rare events – Not historically seen events](rare-events-not-historically-seen-events)
-  - [Pivot- To create heatmap like data structure to identify hourly spikes](pivot-to-create-heatmap-like-data-structure-to-identify-hourly-spikes)
-- [Extending KQL](#extend-KQL)
-  - [Github Action for dynamic TI Feeds](github-action-for-dynamic-ti-feeds)
-  - [ADX/LA Interoperability](adx/la-interoperability)
+- [Practical Detection Engineering/Hunting with KQL](#practical-detection-engineeringhunting-with-kql)
+  - [Simple aggregation and threshold-based query](#simple-aggregation-and-threshold-based-query)
+  - [Bringing context from other data sources](#bringing-context-from-other-data-sources)
+  - [Rare events – Not historically seen events](#rare-events-–-not-historically-seen-events)
+  - [Pivot- To create heatmap like data structure to identify hourly spikes](#pivot--to-create-heatmap-like-data-structure-to-identify-hourly-spikes)
+- [Extending KQL](#extending-kql)
+  - [Github Action for dynamic TI Feeds](#github-action-for-dynamic-ti-feeds)
+  - [ADX/LA Interoperability](#adxla-interoperability)
 ## Structure of Basic KQL Query
 1. Variable Declaration
 2. Table Name
@@ -463,6 +463,7 @@ let githubaccesstokenregex = pywhatregex | where Name == "GitHub Access Token" |
 githubaccesstokenregex
 ```
 
+ ## KQLCafe-2022
 ## Practical Detection Engineering/Hunting with KQL
 
 
