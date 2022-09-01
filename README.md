@@ -1,16 +1,19 @@
 # blue-teaming-with-kql
 Repository with Sample KQL Query examples for Threat Hunting
 
-This folder has various KQL examples related to Threat Hunting/Blue Teaming presented at [Blue Team Village at GrayHat 2020](https://grayhat.co/event/blue-teaming-with-kusto-query-language-kql/).
+This folder has various KQL examples related to Threat Hunting/Blue Teaming presented at [Blue Team Village at GrayHat 2020] (https://grayhat.co/event/blue-teaming-with-kusto-query-language-kql/) and a presentation given at [KQLCafe](https://kqlcafe.github.io/website/) Podcast- Aug 2022.
 
 ## Presentation:
 
 [GrayHat-BlueTeamingwithKQL](https://github.com/ashwin-patil/blue-teaming-with-kql/blob/main/GrayHat-%20BlueTeamingwithKQL.pdf)
 
-## Talk Recorded Video
+[Blue Teaming with KQL – 2022 KQL|Café Edition](https://github.com/ashwin-patil/blue-teaming-with-kql/blob/main/KQLCafe-BlueTeamingwithKQL-2022.pdf)
+
+## GrayHat Talk Recorded Video
 [![IMAGE ALT TEXT HERE](./images/youtube_thumbnail.jpg)](https://www.youtube.com/watch?v=IMZkqTEBFeA)
 
-
+## KQLCafe-Aug2022 Recorded Video
+[PendingforPublishing]
 
  **Jupyter Notebook** : 
  
@@ -33,7 +36,15 @@ This folder has various KQL examples related to Threat Hunting/Blue Teaming pres
 - [KQL Programmatic Interfaces](#kql-programmatic-interfaces)
     - [QueryProvider Demo](#queryprovider-demo)
  - [KQL Gallery](#kql-gallery)
-
+ ## KQLCafe-2022
+- [Practical Detection Engineering/Hunting with KQL](practical-kql)
+  - [Simple aggregation and threshold-based query](simple-aggregation-and-threshold-based-query)
+  - [Bringing context from other data sources](bringing-context-from-other-data-sources)
+  - [Rare events – Not historically seen events](rare-events-not-historically-seen-events)
+  - [Pivot- To create heatmap like data structure to identify hourly spikes](pivot-to-create-heatmap-like-data-structure-to-identify-hourly-spikes)
+- [Extending KQL](#extend-KQL)
+  - [Github Action for dynamic TI Feeds](github-action-for-dynamic-ti-feeds)
+  - [ADX/LA Interoperability](adx/la-interoperability)
 ## Structure of Basic KQL Query
 1. Variable Declaration
 2. Table Name
@@ -451,3 +462,124 @@ let pywhatregex = (externaldata(Name:string, Regex:string, plural_name: string, 
 let githubaccesstokenregex = pywhatregex | where Name == "GitHub Access Token" | project Regex;
 githubaccesstokenregex
 ```
+
+## Practical Detection Engineering/Hunting with KQL
+
+
+### Simple aggregation and threshold-based query
+[Suspicious enumeration using Adfind tool](https://github.com/Azure/Azure-Sentinel/blob/master/Hunting%20Queries/SecurityEvent/Suspicious_enumeration_using_adfind.yaml)
+
+```python
+let lookupwindow = 2m;
+  let threshold = 3; //number of commandlines in the set below
+  let DCADFSServersList = dynamic (["DCServer01", "DCServer02", "ADFSServer01"]); // Enter a reference list of hostnames for your DC/ADFS servers
+  let tokens = dynamic(["objectcategory","domainlist","dcmodes","adinfo","trustdmp","computers_pwdnotreqd","Domain Admins", "objectcategory=person", "objectcategory=computer", "objectcategory=*"]);
+  SecurityEvent
+  //| where Computer in (DCADFSServersList) // Uncomment to limit it to your DC/ADFS servers list if specified above or any pattern in hostnames (startswith, matches regex, etc).
+  | where EventID == 4688
+  | where CommandLine has_any (tokens)
+  | where CommandLine matches regex "(.*)>(.*)"
+  | summarize Commandlines = make_set(CommandLine), LastObserved=max(TimeGenerated) by bin(TimeGenerated, lookupwindow), Account, Computer, ParentProcessName, NewProcessName
+  | extend Count = array_length(Commandlines)
+  | where Count > threshold
+```
+### Bringing context from other data sources
+[Privileged Accounts - Failed MFA](https://github.com/Azure/Azure-Sentinel/blob/master/Hunting%20Queries/MultipleDataSources/AADPrivilegedAccountsFailedMFA.yaml)
+Populating Privileged accounts dynamically via IdentityInfo table.
+```python
+let starttime = 2d;
+  let endtime = 1d;
+  let aadFunc = (tableName:string){
+  IdentityInfo
+  | where AssignedRoles contains "Admin"
+  | mv-expand AssignedRoles
+  | extend Roles = tostring(AssignedRoles), AccountUPN = tolower(AccountUPN)
+  | where Roles contains "Admin"
+  | distinct Roles, AccountUPN
+  | join kind=inner (
+    // Failed Signins attempts with reasoning related to MFA.
+    table(tableName)
+    | where TimeGenerated between(ago(starttime)..ago(endtime))
+    | where ResultDescription has_any ("MFA", "second factor", "multi-factor", "second factor") or ResultType in (50074, 50076, 50079, 50072, 53004, 500121)
+  ) on $left.AccountUPN == $right.UserPrincipalName
+  | extend timestamp = TimeGenerated, IPCustomEntity = IPAddress, AccountCustomEntity = UserPrincipalName
+  };
+  let aadSignin = aadFunc("SigninLogs");
+  let aadNonInt = aadFunc("AADNonInteractiveUserSignInLogs");
+  union isfuzzy=true aadSignin, aadNonInt
+```
+### Rare events – Not historically seen events
+[Palo Alto Threat signatures from Unusual IP addresses](https://github.com/Azure/Azure-Sentinel/blob/master/Solutions/PaloAlto-PAN-OS/Analytic%20Rules/PaloAlto-UnusualThreatSignatures.yaml)
+
+```python
+let starttime = 7d;
+  let endtime = 1d;
+  let timeframe = 1h;
+  let HistThreshold = 25; 
+  let CurrThreshold = 10; 
+  let HistoricalThreats = CommonSecurityLog
+  | where isnotempty(SourceIP)
+  | where TimeGenerated between (startofday(ago(starttime))..startofday(ago(endtime)))
+  | where DeviceVendor =~ "Palo Alto Networks"
+  | where Activity =~ "THREAT" and SimplifiedDeviceAction =~ "alert" 
+  | where DeviceEventClassID in ('spyware', 'scan', 'file', 'vulnerability', 'flood', 'packet', 'virus','wildfire', 'wildfire-virus')
+  | summarize TotalEvents = count(), ThreatTypes = make_set(DeviceEventClassID), DestinationIpList = make_set(DestinationIP), FirstSeen = min(TimeGenerated) , LastSeen = max(TimeGenerated) by SourceIP, DeviceAction, DeviceVendor;
+  let CurrentHourThreats =  CommonSecurityLog
+  | where isnotempty(SourceIP)
+  | where TimeGenerated > ago(timeframe)
+  | where DeviceVendor =~ "Palo Alto Networks"
+  | where Activity =~ "THREAT" and SimplifiedDeviceAction =~ "alert" 
+  | where DeviceEventClassID in ('spyware', 'scan', 'file', 'vulnerability', 'flood', 'packet', 'virus','wildfire', 'wildfire-virus')
+  | summarize TotalEvents = count(), ThreatTypes = make_set(DeviceEventClassID), DestinationIpList = make_set(DestinationIP), FirstSeen = min(TimeGenerated) , LastSeen = max(TimeGenerated) by SourceIP, DeviceAction, DeviceProduct, DeviceVendor;
+  CurrentHourThreats 
+  | where TotalEvents < CurrThreshold
+  | join kind = leftanti (HistoricalThreats 
+  | where TotalEvents > HistThreshold) on SourceIP
+```
+### Pivot- To create heatmap like data structure to identify hourly spikes
+Use `granny-asc` option with `project-reorder` to sort columns with numbers as name. 
+
+```python
+let end = now();
+let start = end - 7d;
+SecurityEvent
+| where EventID == 4625
+| where TimeGenerated >= startofday(start)
+| where TimeGenerated <= startofday(end)
+| extend
+    HourOfLogin = toint(hourofday(TimeGenerated)),
+    DayNumberofWeek = dayofweek(TimeGenerated),
+    Date = format_datetime(TimeGenerated, "yyyy-MM-dd")
+| extend DayofWeek = case(DayNumberofWeek == "00:00:00", "Sunday", DayNumberofWeek == "1.00:00:00", "Monday", DayNumberofWeek == "2.00:00:00", "Tuesday", DayNumberofWeek == "3.00:00:00", "Wednesday", DayNumberofWeek == "4.00:00:00", "Thursday", DayNumberofWeek == "5.00:00:00", "Friday", DayNumberofWeek == "6.00:00:00", "Saturday", "InvalidTimeStamp")
+| evaluate pivot(HourOfLogin, count(), DayofWeek, Date)
+| project-reorder Date, DayofWeek, * granny-asc 
+| sort by Date asc
+```
+
+
+## Extending KQL
+
+### Github Action for dynamic TI Feeds
+- Allows to connect external data sources. 
+- Limited to static sites or blob storage data sources.
+
+Use case - Nord VPN API not accessible via `externaldata`
+
+[Threat Essentials - Signins from Nord VPN Providers](https://github.com/Azure/Azure-Sentinel/blob/master/Solutions/SecurityThreatEssentialSolution/Hunting%20Queries/Signins-from-NordVPN-Providers.yaml)
+
+Github Actions:
+- Workflow: [Daily Nord VPN Servers Feed](https://github.com/microsoft/mstic/blob/master/.github/workflows/nordvpn-feed.yml) 
+- Python Script : [get-nordvpnservers.py](https://github.com/microsoft/mstic/blob/master/.script/get-nordvpnservers.py)
+- Monitor Github Action: Github Action Workflow (https://github.com/microsoft/mstic/actions/workflows/nordvpn-feed.yml)
+
+### ADX/LA Interoperability
+- KQL has varying support in Azure Data Explorer (ADX) and Azure Log Analytics(LA)/Sentinel.
+- You can connect both products from each other and can run native KQL against it.
+- Connect additional data sources without duplicating data.
+- Use Kusto explorer client with rich features on LA data. 
+- Extend support of missing KQL operators in LA/Sentinel.
+
+Connect ADX via LA: [Cross-resource query Azure Data Explorer by using Azure Monitor - Azure Monitor | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/azure-monitor-data-explorer-proxy#cross-query-your-log-analytics-or-application-insights-resources-and-azure-data-explorer)
+
+Connect LA via ADX: [Query data in Azure Monitor with Azure Data Explorer | Microsoft Docs](https://docs.microsoft.com/en-us/azure/data-explorer/query-monitor-data#add-a-log-analyticsapplication-insights-workspace-to-azure-data-explorer-client-tools)
+
